@@ -78,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
         imgProfile = (ImageView) navHeader.findViewById(R.id.img_profile);
 
         activityTitles = getResources().getStringArray(R.array.nav_item_activity_titles);
+
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -259,7 +260,7 @@ public class MainActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         if (navItemIndex == 0) {
-            getMenuInflater().inflate(R.menu.menu_main, menu);
+            //getMenuInflater().inflate(R.menu.explorer_menu, menu);
         }
 
         // when fragment is notifications, load the menu created for notifications
