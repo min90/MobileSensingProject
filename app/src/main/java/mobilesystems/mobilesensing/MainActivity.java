@@ -45,15 +45,13 @@ public class MainActivity extends AppCompatActivity {
 
     private NavigationView navigationView;
     private DrawerLayout drawerLayout;
-    private View navHeader;
-    private ImageView imgNavHeaderBg, imgProfile;
+    private ImageView imgProfile;
     private TextView txtName, txtWebsite;
     private Toolbar toolbar;
     private FloatingActionButton fab;
 
     private String[] activityTitles;
 
-    private boolean shouldLoadHomeFragOnBackPress = true;
     private Handler handler;
 
 
@@ -71,10 +69,9 @@ public class MainActivity extends AppCompatActivity {
         navigationView = (NavigationView) findViewById(R.id.nav_view);
         fab = (FloatingActionButton) findViewById(R.id.fab);
 
-        navHeader = navigationView.getHeaderView(0);
+        View navHeader = navigationView.getHeaderView(0);
         txtName = (TextView) navHeader.findViewById(R.id.name);
         txtWebsite = (TextView) navHeader.findViewById(R.id.website);
-        //imgNavHeaderBg = (ImageView) navHeader.findViewById(R.id.img_header_bg);
         imgProfile = (ImageView) navHeader.findViewById(R.id.img_profile);
 
         activityTitles = getResources().getStringArray(R.array.nav_item_activity_titles);
@@ -102,7 +99,6 @@ public class MainActivity extends AppCompatActivity {
         txtName.setText("Test user");
         txtWebsite.setText("example.com");
 
-        //Glide.with(this).load(urlNavHeaderBg).crossFade().diskCacheStrategy(DiskCacheStrategy.ALL).into(imgNavHeaderBg);
         Glide.with(this).load(urlProfileImg).crossFade().thumbnail(0.5f).bitmapTransform(new CircleTransform(this)).diskCacheStrategy(DiskCacheStrategy.ALL).into(imgProfile);
         navigationView.getMenu().getItem(1).setActionView(R.layout.menu_dot);
     }
@@ -112,7 +108,7 @@ public class MainActivity extends AppCompatActivity {
         selectNavMenu();
 
         // set toolbar title
-        setToolbarTitle();
+        setToolbarTitle(null);
 
         // if user select the current navigation menu again, don't do anything
         // just close the navigation drawer
@@ -172,9 +168,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void setToolbarTitle() {
+    public void setToolbarTitle(String title) {
         try {
-            getSupportActionBar().setTitle(activityTitles[navItemIndex]);
+            if (title == null) {
+                getSupportActionBar().setTitle(activityTitles[navItemIndex]);
+            } else {
+                getSupportActionBar().setTitle(title);
+            }
         } catch (NullPointerException ex) {
             Log.d(DEBUG_TAG, "Toolbar is null", ex);
         }
@@ -279,6 +279,7 @@ public class MainActivity extends AppCompatActivity {
 
         // This code loads home fragment when back key is pressed
         // when user is in other fragment than home
+        boolean shouldLoadHomeFragOnBackPress = true;
         if (shouldLoadHomeFragOnBackPress) {
             // checking if user is on other navigation menu
             // rather than home

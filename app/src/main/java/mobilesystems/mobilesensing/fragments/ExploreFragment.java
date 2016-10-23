@@ -20,6 +20,7 @@ import java.util.List;
 import mobilesystems.mobilesensing.R;
 import mobilesystems.mobilesensing.adapters.ExploreAdapter;
 import mobilesystems.mobilesensing.models.Task;
+import mobilesystems.mobilesensing.persistence.FragmentTransactioner;
 
 /**
  * Created by Jesper on 21/10/2016.
@@ -62,6 +63,7 @@ public class ExploreFragment extends Fragment {
         switch (item.getItemId()) {
             case R.id.explorer_map:
                 //TODO Open map
+                FragmentTransactioner.get().transactFragments(getActivity(), new ExploreMapFragment(), "map_fragment");
                 Toast.makeText(getActivity(), "Opening map....", Toast.LENGTH_SHORT).show();
                 return true;
             case R.id.explorer_search:
