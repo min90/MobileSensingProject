@@ -28,6 +28,7 @@ import mobilesystems.mobilesensing.fragments.AccountFragment;
 import mobilesystems.mobilesensing.fragments.ChallengesFragment;
 import mobilesystems.mobilesensing.fragments.ExploreFragment;
 import mobilesystems.mobilesensing.other.CircleTransform;
+import mobilesystems.mobilesensing.persistence.NetworkPackager;
 
 public class MainActivity extends AppCompatActivity {
     //SKAL SLETTES EFTER TEST
@@ -93,6 +94,9 @@ public class MainActivity extends AppCompatActivity {
             CURRENT_TAG = TAG_EXPLORE;
             loadHomeFragment();
         }
+
+        NetworkPackager networkPackager = new NetworkPackager(this);
+        Log.d(DEBUG_TAG, "USers: " + networkPackager.getUsers().toString());
     }
 
     private void loadNavHeader() {
