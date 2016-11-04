@@ -36,8 +36,8 @@ dependencies {
     compile 'com.google.android.gms:play-services:9.6.1'
     testCompile 'junit:junit:4.12'
 
-    compile 'net.zetetic:android-database-sqlcipher:3.3.1-1@aar'
-    compile(name: 'sugarormusingsqlcipher', ext: 'aar') {
+    compile 'net.zetetic:android-database-sqlcipher:3.5.4@aar'
+    compile(name: 'sugarorm-release', ext: 'aar') {
         transitive = true;
     }
     compile 'com.android.support:recyclerview-v7:25.0.0'

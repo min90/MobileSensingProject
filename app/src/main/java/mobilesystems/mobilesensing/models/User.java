@@ -4,7 +4,9 @@ import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 
-import dk.medware.sugarcipherlib.SugarRecord;
+import mobilesystems.sugarorm.SugarApp;
+import mobilesystems.sugarorm.SugarRecord;
+
 
 /**
  * Created by Jesper on 27/10/2016.
@@ -21,6 +23,9 @@ public class User extends SugarRecord {
     private String userName;
     @SerializedName("password")
     private String userPassword;
+
+    public User() {
+    }
 
     public User(String userID, String userPhone, String userEmail, String userName, String userPassword) {
         this.userID = userID;

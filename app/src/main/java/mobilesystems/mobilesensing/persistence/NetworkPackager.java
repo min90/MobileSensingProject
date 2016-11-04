@@ -1,7 +1,6 @@
 package mobilesystems.mobilesensing.persistence;
 
 import android.content.Context;
-import android.graphics.drawable.Drawable;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -45,7 +44,7 @@ public class NetworkPackager {
             public void onResponse(Call<List<User>> call, Response<List<User>> response) {
                 users.addAll(response.body());
                 Log.d(DEBUG_TAG, "Users: " + users.toString());
-                //addNewUsersToDB(users);
+                addNewUsersToDB(users);
 
             }
 
@@ -59,9 +58,9 @@ public class NetworkPackager {
 
     @SuppressWarnings("unchecked")
     private void addNewUsersToDB(List<User> users) {
-        List<User> getUserFromDB = (List<User>) User.findAll(User.class);
+        List<User> allUsers = User.listAll(User.class);
         for (User user : users) {
-            for (User user1 : getUserFromDB) {
+            for (User user1 : allUsers) {
                 if (!user.equals(user1)) {
                     user.save();
                 }

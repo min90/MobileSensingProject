@@ -2,7 +2,8 @@ package mobilesystems.mobilesensing.models;
 
 import android.graphics.Bitmap;
 
-import dk.medware.sugarcipherlib.SugarRecord;
+import mobilesystems.sugarorm.SugarRecord;
+
 
 /**
  * Created by Jesper on 21/10/2016.
