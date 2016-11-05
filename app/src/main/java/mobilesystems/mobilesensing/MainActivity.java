@@ -27,8 +27,10 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import mobilesystems.mobilesensing.fragments.AccountFragment;
 import mobilesystems.mobilesensing.fragments.ChallengesFragment;
 import mobilesystems.mobilesensing.fragments.ExploreFragment;
+import mobilesystems.mobilesensing.models.User;
 import mobilesystems.mobilesensing.other.CircleTransform;
 import mobilesystems.mobilesensing.persistence.NetworkPackager;
+import mobilesystems.sugarorm.SugarDb;
 
 public class MainActivity extends AppCompatActivity {
     //SKAL SLETTES EFTER TEST
@@ -61,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        SugarDb.DB_KEY = "1234";
 
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -97,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         NetworkPackager networkPackager = new NetworkPackager(this);
-        Log.d(DEBUG_TAG, "USers: " + networkPackager.getUsers().toString());
+        Log.d(DEBUG_TAG, "Users: " + User.listAll(User.class));
     }
 
     private void loadNavHeader() {
@@ -166,7 +169,7 @@ public class MainActivity extends AppCompatActivity {
                 // Challenges
                 return new ChallengesFragment();
             case 2:
-                // movies fragment
+                // account fragment
                 return new AccountFragment();
             default:
                 return new ExploreFragment();

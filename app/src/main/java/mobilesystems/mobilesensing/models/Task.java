@@ -2,6 +2,10 @@ package mobilesystems.mobilesensing.models;
 
 import android.graphics.Bitmap;
 
+import com.google.gson.annotations.SerializedName;
+
+import java.io.Serializable;
+
 import mobilesystems.sugarorm.SugarRecord;
 
 
@@ -9,13 +13,23 @@ import mobilesystems.sugarorm.SugarRecord;
  * Created by Jesper on 21/10/2016.
  */
 
-public class Task extends SugarRecord {
+public class Task extends SugarRecord implements Serializable {
+    @SerializedName("distance")
     private int distance;
+    @SerializedName("subject_distance")
     private String subjectDistance;
+    @SerializedName("subject")
     private String subject;
+    @SerializedName("description")
     private String description;
+
     private Bitmap subjectIcon;
     private Bitmap userPicture;
+    private double latitude;
+    private double longitude;
+
+    public Task() {
+    }
 
     public Task(int distance, String subjectDistance, String subject, String description) {
         this.distance = distance;
@@ -81,6 +95,22 @@ public class Task extends SugarRecord {
         this.userPicture = userPicture;
     }
 
+    public double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(double latitude) {
+        this.latitude = latitude;
+    }
+
+    public double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(double longitude) {
+        this.longitude = longitude;
+    }
+
     @Override
     public String toString() {
         return "Task{" +
@@ -90,6 +120,8 @@ public class Task extends SugarRecord {
                 ", description='" + description + '\'' +
                 ", subjectIcon=" + subjectIcon +
                 ", userPicture=" + userPicture +
+                ", latitude=" + latitude +
+                ", longitude=" + longitude +
                 '}';
     }
 }

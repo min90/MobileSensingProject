@@ -13,10 +13,13 @@
 
     <string name="nav_challenges">Udfordringer</string>
 
+    <string name="nav_add_tasks">Opret et tip</string>
+
     <string name="nav_my_account">Min Konto</string>
     
     <string name="menu_map">Kort</string>
     <string name="menu_search">Søg</string>
+    <string name="menu_update">Opdater opgaver</string>
 
     <!-- Toolbar titles when navigation menu item is selected -->
     <string-array name="nav_item_activity_titles">
