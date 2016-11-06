@@ -18,6 +18,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.cocoahero.android.geojson.GeoJSON;
+import com.cocoahero.android.geojson.GeoJSONObject;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
@@ -30,11 +32,16 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.maps.android.PolyUtil;
+
+import org.json.JSONException;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import mobilesystems.mobilesensing.R;
+import mobilesystems.mobilesensing.geofence.GeoFencingProvider;
+import mobilesystems.mobilesensing.json.GeoJSONParser;
 import mobilesystems.mobilesensing.models.Task;
 import mobilesystems.mobilesensing.persistence.FragmentTransactioner;
 
@@ -47,8 +54,8 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
     private final static String DEBUG_TAG = ExploreFragment.class.getSimpleName();
 
     private final static int MY_LOCATION_REQUEST_CODE = 00;
-    private final static double ODENSE_LAT = 55.403756;
-    private final static double ODENSE_LNG = 10.402370;
+    public final static double ODENSE_LAT = 55.403756;
+    public final static double ODENSE_LNG = 10.402370;
 
     private GoogleMap mGoogleMap;
     private LatLng odensePosition = new LatLng(ODENSE_LAT, ODENSE_LNG);
@@ -56,6 +63,9 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
     private GoogleApiClient mGoogleApiClient;
     private Location lastKnownLocation;
     private LocationRequest mLocationRequest;
+    private GeoFencingProvider geoFencingProvider;
+    private GeoJSONParser geoJSONParser;
+    private ArrayList<LatLng> latLngs;
 
     @Nullable
     @Override
@@ -66,6 +76,8 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
 
+        geoFencingProvider = new GeoFencingProvider(getActivity());
+        geoJSONParser = new GeoJSONParser();
         connectToGoogleAPI();
         createLocationRequest();
         setHasOptionsMenu(true);
@@ -139,16 +151,12 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
                 //TODO search for a challenge
                 //Toast.makeText(getActivity(), "Searching....", Toast.LENGTH_SHORT).show();
                 //TODO just for testing
-                testNewInformation();
                 return true;
             case R.id.explorer_update_markers:
                 updateMarkers();
             default:
                 return super.onOptionsItemSelected(item);
         }
-    }
-
-    private void testNewInformation() {
     }
 
     @Override
@@ -171,9 +179,11 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
         }
 
         updateMarkers();
+        setUpBoundariesForOdense();
     }
 
     private void updateMarkers() {
+        stopSearchingForMarkers();
         if (mGoogleMap != null) {
             for (MarkerOptions markerOptions : addMarkersByUsersPosition()) {
                 mGoogleMap.addMarker(markerOptions);
@@ -220,6 +230,17 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
         return availableTasks;
     }
 
+    private void setUpBoundariesForOdense() {
+        try {
+            if (latLngs == null || latLngs.isEmpty()) {
+                GeoJSONObject geoJSONObject = geoFencingProvider.readOdenseBoundaries();
+                latLngs = geoJSONParser.parseOdenseBoundaries(geoJSONObject);
+            }
+        } catch (JSONException ex) {
+            Log.e(DEBUG_TAG, "Unable to read GeoJSON", ex);
+        }
+    }
+
     private MarkerOptions generateMarker(Task task) {
         return new MarkerOptions()
                 .position(new LatLng(task.getLatitude(), task.getLongitude()))
@@ -228,11 +249,16 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
     }
 
     private boolean stopSearchingForMarkers() {
-//        if (out of range) {
-//            stopLocationUpdates();
-//        }
-        //TODO stop if we are out of radius, use location update to check if we enters the circle.
-        return true;
+        if (lastKnownLocation != null && latLngs != null) {
+            LatLng latLng = new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
+            if (PolyUtil.containsLocation(latLng, latLngs, false)) {
+                return true;
+            } else {
+                stopLocationUpdates();
+                return false;
+            }
+        }
+        return false;
     }
 
     /**
@@ -334,8 +360,8 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
     @Override
     public boolean onMarkerClick(Marker marker) {
         //TODO open info for task, find and marker with task.
-        Fragment taskInfoFragment = TaskInfoFragment.newInstance(null);
-        FragmentTransactioner.get().transactFragments(getActivity(), taskInfoFragment, "task_info_fragment");
+//        Fragment taskInfoFragment = TaskInfoFragment.newInstance(null);
+//        FragmentTransactioner.get().transactFragments(getActivity(), taskInfoFragment, "task_info_fragment");
         return false;
     }
 
@@ -348,7 +374,9 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
     }
 
     protected void stopLocationUpdates() {
-        LocationServices.FusedLocationApi.removeLocationUpdates(
-                mGoogleApiClient, this);
+        if (mGoogleApiClient.isConnected()) {
+            LocationServices.FusedLocationApi.removeLocationUpdates(
+                    mGoogleApiClient, this);
+        }
     }
 }
