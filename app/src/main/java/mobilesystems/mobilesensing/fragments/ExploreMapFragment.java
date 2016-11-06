@@ -18,7 +18,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import com.cocoahero.android.geojson.GeoJSON;
 import com.cocoahero.android.geojson.GeoJSONObject;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -40,7 +39,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import mobilesystems.mobilesensing.R;
-import mobilesystems.mobilesensing.geofence.GeoFencingProvider;
+import mobilesystems.mobilesensing.geofence.GeoJsonFetcher;
 import mobilesystems.mobilesensing.json.GeoJSONParser;
 import mobilesystems.mobilesensing.models.Task;
 import mobilesystems.mobilesensing.persistence.FragmentTransactioner;
@@ -63,7 +62,7 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
     private GoogleApiClient mGoogleApiClient;
     private Location lastKnownLocation;
     private LocationRequest mLocationRequest;
-    private GeoFencingProvider geoFencingProvider;
+    private GeoJsonFetcher geoJsonFetcher;
     private GeoJSONParser geoJSONParser;
     private ArrayList<LatLng> latLngs;
 
@@ -76,7 +75,7 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
 
-        geoFencingProvider = new GeoFencingProvider(getActivity());
+        geoJsonFetcher = new GeoJsonFetcher(getActivity());
         geoJSONParser = new GeoJSONParser();
         connectToGoogleAPI();
         createLocationRequest();
@@ -233,7 +232,7 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
     private void setUpBoundariesForOdense() {
         try {
             if (latLngs == null || latLngs.isEmpty()) {
-                GeoJSONObject geoJSONObject = geoFencingProvider.readOdenseBoundaries();
+                GeoJSONObject geoJSONObject = geoJsonFetcher.readOdenseBoundaries();
                 latLngs = geoJSONParser.parseOdenseBoundaries(geoJSONObject);
             }
         } catch (JSONException ex) {
