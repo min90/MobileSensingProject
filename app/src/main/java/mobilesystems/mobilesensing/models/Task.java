@@ -27,6 +27,7 @@ public class Task extends SugarRecord implements Serializable {
     private Bitmap userPicture;
     private double latitude;
     private double longitude;
+    private int taskId;
 
     public Task() {
     }
@@ -111,6 +112,14 @@ public class Task extends SugarRecord implements Serializable {
         this.longitude = longitude;
     }
 
+    public int getTaskId() {
+        return taskId;
+    }
+
+    public void setTaskId(int taskId) {
+        this.taskId = taskId;
+    }
+
     @Override
     public String toString() {
         return "Task{" +
@@ -122,6 +131,47 @@ public class Task extends SugarRecord implements Serializable {
                 ", userPicture=" + userPicture +
                 ", latitude=" + latitude +
                 ", longitude=" + longitude +
+                ", taskId=" + taskId +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Task task = (Task) o;
+
+        if (distance != task.distance) return false;
+        if (Double.compare(task.latitude, latitude) != 0) return false;
+        if (Double.compare(task.longitude, longitude) != 0) return false;
+        if (taskId != task.taskId) return false;
+        if (subjectDistance != null ? !subjectDistance.equals(task.subjectDistance) : task.subjectDistance != null)
+            return false;
+        if (subject != null ? !subject.equals(task.subject) : task.subject != null) return false;
+        if (description != null ? !description.equals(task.description) : task.description != null)
+            return false;
+        if (subjectIcon != null ? !subjectIcon.equals(task.subjectIcon) : task.subjectIcon != null)
+            return false;
+        return userPicture != null ? userPicture.equals(task.userPicture) : task.userPicture == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result;
+        long temp;
+        result = distance;
+        result = 31 * result + (subjectDistance != null ? subjectDistance.hashCode() : 0);
+        result = 31 * result + (subject != null ? subject.hashCode() : 0);
+        result = 31 * result + (description != null ? description.hashCode() : 0);
+        result = 31 * result + (subjectIcon != null ? subjectIcon.hashCode() : 0);
+        result = 31 * result + (userPicture != null ? userPicture.hashCode() : 0);
+        temp = Double.doubleToLongBits(latitude);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(longitude);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        result = 31 * result + taskId;
+        return result;
     }
 }

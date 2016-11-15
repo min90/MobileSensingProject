@@ -36,7 +36,9 @@ import com.google.maps.android.PolyUtil;
 import org.json.JSONException;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import mobilesystems.mobilesensing.R;
 import mobilesystems.mobilesensing.geofence.GeoJsonFetcher;
@@ -65,6 +67,7 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
     private GeoJsonFetcher geoJsonFetcher;
     private GeoJSONParser geoJSONParser;
     private ArrayList<LatLng> latLngs;
+    private LinkedHashMap<Marker, Task> markers;
 
     @Nullable
     @Override
@@ -77,6 +80,7 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
 
         geoJsonFetcher = new GeoJsonFetcher(getActivity());
         geoJSONParser = new GeoJSONParser();
+        markers = new LinkedHashMap<>();
         connectToGoogleAPI();
         createLocationRequest();
         setHasOptionsMenu(true);
@@ -97,6 +101,7 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
         task.setSubject("Affald");
         task.setLatitude(55.422138);
         task.setLongitude(10.254772);
+        task.setTaskId(1);
 
         task.save();
 
@@ -105,6 +110,7 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
         task1.setSubject("Belysning");
         task1.setLatitude(55.420044);
         task1.setLongitude(10.271659);
+        task1.setTaskId(2);
 
         task1.save();
 
@@ -113,10 +119,9 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
         task2.setSubject("Belysning");
         task2.setLatitude(55.391272);
         task2.setLongitude(10.438900);
+        task2.setTaskId(3);
 
         task2.save();
-
-
     }
 
     private void connectToGoogleAPI() {
@@ -177,15 +182,18 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
             googleMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude())));
         }
 
-        updateMarkers();
         setUpBoundariesForOdense();
+        updateMarkers();
     }
 
     private void updateMarkers() {
         stopSearchingForMarkers();
         if (mGoogleMap != null) {
-            for (MarkerOptions markerOptions : addMarkersByUsersPosition()) {
-                mGoogleMap.addMarker(markerOptions);
+            for (Map.Entry<Task, MarkerOptions> markerOptionsEntry : addMarkersByUsersPosition().entrySet()) {
+                Marker marker = mGoogleMap.addMarker(markerOptionsEntry.getValue());
+                if (markers != null) {
+                    markers.put(marker, markerOptionsEntry.getKey());
+                }
             }
         }
     }
@@ -205,8 +213,8 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
                 .build();
     }
 
-    private List<MarkerOptions> addMarkersByUsersPosition() {
-        List<MarkerOptions> availableTasks = new ArrayList<>();
+    private LinkedHashMap<Task, MarkerOptions> addMarkersByUsersPosition() {
+        LinkedHashMap<Task, MarkerOptions> availableTasks = new LinkedHashMap<>();
         List<Task> allTasks = Task.listAll(Task.class);
 
         double latitude;
@@ -220,13 +228,22 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
             longitude = ODENSE_LNG;
         }
 
-        for (Task task : allTasks) {
-            if (distFrom(latitude, longitude, task.getLatitude(), task.getLongitude()) < 50) {
-                availableTasks.add(generateMarker(task));
+        for (int i = 0; i < allTasks.size(); i++) {
+            if (distFrom(latitude, longitude, allTasks.get(i).getLatitude(), allTasks.get(i).getLongitude()) < 50) {
+                if (markers != null) {
+                    MarkerOptions markerOptions = generateMarker(allTasks.get(i));
+                    availableTasks.put(allTasks.get(i), markerOptions);
+                }
             }
         }
-
         return availableTasks;
+    }
+
+    private MarkerOptions generateMarker(Task task) {
+        return new MarkerOptions()
+                .position(new LatLng(task.getLatitude(), task.getLongitude()))
+                .title(task.getSubject())
+                .snippet(task.getDescription());
     }
 
     private void setUpBoundariesForOdense() {
@@ -240,12 +257,6 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
         }
     }
 
-    private MarkerOptions generateMarker(Task task) {
-        return new MarkerOptions()
-                .position(new LatLng(task.getLatitude(), task.getLongitude()))
-                .title(task.getSubject())
-                .snippet(task.getDescription());
-    }
 
     private boolean stopSearchingForMarkers() {
         if (lastKnownLocation != null && latLngs != null) {
@@ -270,7 +281,7 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
      * @return the distance
      */
     public static double distFrom(double lat1, double lng1, double lat2, double lng2) {
-        double earthRadius = 6371.0; // miles (or 6371.0 kilometers)
+        double earthRadius = 6371.0;
         double dLat = Math.toRadians(lat2 - lat1);
         double dLng = Math.toRadians(lng2 - lng1);
         double sindLat = Math.sin(dLat / 2);
@@ -358,9 +369,12 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
 
     @Override
     public boolean onMarkerClick(Marker marker) {
-        //TODO open info for task, find and marker with task.
-//        Fragment taskInfoFragment = TaskInfoFragment.newInstance(null);
-//        FragmentTransactioner.get().transactFragments(getActivity(), taskInfoFragment, "task_info_fragment");
+        Task task = null;
+        if (markers != null) {
+            task = markers.get(marker);
+        }
+        Fragment taskInfoFragment = TaskInfoFragment.newInstance(task);
+        FragmentTransactioner.get().transactFragments(getActivity(), taskInfoFragment, "task_info_fragment");
         return false;
     }
 
