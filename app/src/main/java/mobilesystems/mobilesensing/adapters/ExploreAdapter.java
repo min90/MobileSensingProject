@@ -8,19 +8,18 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.List;
-import java.util.zip.Inflater;
 
 import mobilesystems.mobilesensing.R;
-import mobilesystems.mobilesensing.models.Task;
+import mobilesystems.mobilesensing.models.Issue;
 
 /**
  * Created by Jesper on 21/10/2016.
  */
 
 public class ExploreAdapter extends RecyclerView.Adapter<ExploreAdapter.TaskViewHolder> {
-    private List<Task> tasks;
+    private List<Issue> tasks;
 
-    public ExploreAdapter(List<Task> tasks) {
+    public ExploreAdapter(List<Issue> tasks) {
         this.tasks = tasks;
     }
 
@@ -32,8 +31,8 @@ public class ExploreAdapter extends RecyclerView.Adapter<ExploreAdapter.TaskView
 
     @Override
     public void onBindViewHolder(TaskViewHolder holder, int position) {
-        Task task = tasks.get(position);
-        holder.txtSubject.setText(task.getSubject());
+        Issue task = tasks.get(position);
+        holder.txtSubject.setText(task.getCategory());
         holder.txtSubjectDistance.setText(task.getSubjectDistance());
         holder.txtDistance.setText(String.valueOf(task.getDistance()).concat(" m"));
         holder.txtDescription.setText(task.getDescription());

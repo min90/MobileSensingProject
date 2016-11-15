@@ -43,8 +43,9 @@ import java.util.Map;
 import mobilesystems.mobilesensing.R;
 import mobilesystems.mobilesensing.geofence.GeoJsonFetcher;
 import mobilesystems.mobilesensing.json.GeoJSONParser;
-import mobilesystems.mobilesensing.models.Task;
+import mobilesystems.mobilesensing.models.Issue;
 import mobilesystems.mobilesensing.persistence.FragmentTransactioner;
+import mobilesystems.mobilesensing.persistence.NetworkPackager;
 
 /**
  * Created by Jesper on 21/10/2016.
@@ -67,7 +68,7 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
     private GeoJsonFetcher geoJsonFetcher;
     private GeoJSONParser geoJSONParser;
     private ArrayList<LatLng> latLngs;
-    private LinkedHashMap<Marker, Task> markers;
+    private LinkedHashMap<Marker, Issue> markers;
 
     @Nullable
     @Override
@@ -85,6 +86,9 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
         createLocationRequest();
         setHasOptionsMenu(true);
         setToolbarTitle();
+        NetworkPackager networkPackager = new NetworkPackager(getActivity());
+        networkPackager.getIssues();
+        networkPackager.getChallenges();
         return view;
     }
 
@@ -96,27 +100,27 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
     }
 
     private void generateTask() {
-        Task task = new Task();
+        Issue task = new Issue();
         task.setDescription("Affald på hjørnet");
-        task.setSubject("Affald");
+        task.setCategory("Affald");
         task.setLatitude(55.422138);
         task.setLongitude(10.254772);
         task.setTaskId(1);
 
         task.save();
 
-        Task task1 = new Task();
+        Issue task1 = new Issue();
         task1.setDescription("Smadret lampe");
-        task1.setSubject("Belysning");
+        task1.setCategory("Belysning");
         task1.setLatitude(55.420044);
         task1.setLongitude(10.271659);
         task1.setTaskId(2);
 
         task1.save();
 
-        Task task2 = new Task();
+        Issue task2 = new Issue();
         task2.setDescription("Smadret lampe");
-        task2.setSubject("Belysning");
+        task2.setCategory("Belysning");
         task2.setLatitude(55.391272);
         task2.setLongitude(10.438900);
         task2.setTaskId(3);
@@ -189,7 +193,7 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
     private void updateMarkers() {
         stopSearchingForMarkers();
         if (mGoogleMap != null) {
-            for (Map.Entry<Task, MarkerOptions> markerOptionsEntry : addMarkersByUsersPosition().entrySet()) {
+            for (Map.Entry<Issue, MarkerOptions> markerOptionsEntry : addMarkersByUsersPosition().entrySet()) {
                 Marker marker = mGoogleMap.addMarker(markerOptionsEntry.getValue());
                 if (markers != null) {
                     markers.put(marker, markerOptionsEntry.getKey());
@@ -213,9 +217,9 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
                 .build();
     }
 
-    private LinkedHashMap<Task, MarkerOptions> addMarkersByUsersPosition() {
-        LinkedHashMap<Task, MarkerOptions> availableTasks = new LinkedHashMap<>();
-        List<Task> allTasks = Task.listAll(Task.class);
+    private LinkedHashMap<Issue, MarkerOptions> addMarkersByUsersPosition() {
+        LinkedHashMap<Issue, MarkerOptions> availableTasks = new LinkedHashMap<>();
+        List<Issue> allTasks = Issue.listAll(Issue.class);
 
         double latitude;
         double longitude;
@@ -239,10 +243,10 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
         return availableTasks;
     }
 
-    private MarkerOptions generateMarker(Task task) {
+    private MarkerOptions generateMarker(Issue task) {
         return new MarkerOptions()
                 .position(new LatLng(task.getLatitude(), task.getLongitude()))
-                .title(task.getSubject())
+                .title(task.getCategory())
                 .snippet(task.getDescription());
     }
 
@@ -369,7 +373,7 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
 
     @Override
     public boolean onMarkerClick(Marker marker) {
-        Task task = null;
+        Issue task = null;
         if (markers != null) {
             task = markers.get(marker);
         }

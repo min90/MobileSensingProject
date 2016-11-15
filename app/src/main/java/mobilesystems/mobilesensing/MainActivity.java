@@ -99,9 +99,6 @@ public class MainActivity extends AppCompatActivity {
             CURRENT_TAG = TAG_EXPLORE;
             loadHomeFragment();
         }
-
-        NetworkPackager networkPackager = new NetworkPackager(this);
-        Log.d(DEBUG_TAG, "Users: " + User.listAll(User.class));
     }
 
     private void loadNavHeader() {

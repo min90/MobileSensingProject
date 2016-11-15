@@ -19,7 +19,7 @@ import java.util.List;
 
 import mobilesystems.mobilesensing.R;
 import mobilesystems.mobilesensing.adapters.ExploreAdapter;
-import mobilesystems.mobilesensing.models.Task;
+import mobilesystems.mobilesensing.models.Issue;
 import mobilesystems.mobilesensing.persistence.FragmentTransactioner;
 
 /**
@@ -41,7 +41,7 @@ public class ExploreFragment extends Fragment {
     }
 
     private void setUpRecyclerView(View view) {
-        List<Task> tasks = new ArrayList<>();
+        List<Issue> tasks = new ArrayList<>();
         tasks.add(testData());
         exploreAdapter = new ExploreAdapter(tasks);
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getActivity());
@@ -75,9 +75,9 @@ public class ExploreFragment extends Fragment {
         }
     }
 
-    private Task testData() {
+    private Issue testData() {
         String description = getString(R.string.lorem);
-        return new Task(100, "in trash - 24m ago", "Full trash", description);
+        return new Issue(100, "in trash - 24m ago", "Full trash", description);
     }
 
     private void fetchTasks() {
