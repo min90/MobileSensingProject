@@ -7,10 +7,12 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import mobilesystems.mobilesensing.R;
 import mobilesystems.mobilesensing.models.Issue;
+import mobilesystems.mobilesensing.other.EnDecodeImages;
 
 /**
  * Created by Jesper on 21/10/2016.
@@ -29,6 +31,12 @@ public class ExploreAdapter extends RecyclerView.Adapter<ExploreAdapter.TaskView
         return new TaskViewHolder(taskView);
     }
 
+    public void swap(ArrayList<Issue> issues){
+        tasks.clear();
+        tasks.addAll(issues);
+        notifyDataSetChanged();
+    }
+
     @Override
     public void onBindViewHolder(TaskViewHolder holder, int position) {
         Issue task = tasks.get(position);
@@ -37,6 +45,7 @@ public class ExploreAdapter extends RecyclerView.Adapter<ExploreAdapter.TaskView
         holder.txtDistance.setText(String.valueOf(task.getDistance()).concat(" m"));
         holder.txtDescription.setText(task.getDescription());
         //TODO place Imageview with user pictures and according to subject
+        holder.imgUserPicture.setImageBitmap(EnDecodeImages.decodeBase64(task.getPicture()));
     }
 
     @Override

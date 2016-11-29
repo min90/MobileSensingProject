@@ -1,8 +1,11 @@
 package mobilesystems.mobilesensing.fragments;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -20,16 +23,25 @@ import java.util.List;
 import mobilesystems.mobilesensing.R;
 import mobilesystems.mobilesensing.adapters.ExploreAdapter;
 import mobilesystems.mobilesensing.models.Issue;
+import mobilesystems.mobilesensing.other.Util;
 import mobilesystems.mobilesensing.persistence.FragmentTransactioner;
 
 /**
  * Created by Jesper on 21/10/2016.
  */
 
-public class ExploreFragment extends Fragment {
+public class ExploreFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
     private static final String DEBUG_TAG = ExploreFragment.class.getSimpleName();
+    private final static String SHARED_TAG = "shared";
+    public final static double ODENSE_LAT = 55.403756;
+    public final static double ODENSE_LNG = 10.402370;
+
     private ExploreAdapter exploreAdapter;
     private RecyclerView recyclerView;
+    private SwipeRefreshLayout swipeRefreshLayout;
+    private float longitude;
+    private float latitude;
+    private SharedPreferences sharedPreferences;
 
     @Nullable
     @Override
@@ -37,19 +49,25 @@ public class ExploreFragment extends Fragment {
         View view = inflater.inflate(R.layout.explore_list, container, false);
         setUpRecyclerView(view);
         setHasOptionsMenu(true);
+        swipeRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.refresh_issues);
+        swipeRefreshLayout.setOnRefreshListener(this);
+        sharedPreferences = getActivity().getSharedPreferences(SHARED_TAG, Context.MODE_PRIVATE);
+        fetchLastKnownLocation();
         return view;
     }
 
     private void setUpRecyclerView(View view) {
-        List<Issue> tasks = new ArrayList<>();
-        tasks.add(testData());
-        exploreAdapter = new ExploreAdapter(tasks);
+        exploreAdapter = new ExploreAdapter(fetchIssues());
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getActivity());
         recyclerView = (RecyclerView) view.findViewById(R.id.explore_list);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.setAdapter(exploreAdapter);
+    }
 
+    private void fetchLastKnownLocation() {
+        latitude = sharedPreferences.getFloat("Lat", (float) ODENSE_LAT);
+        longitude = sharedPreferences.getFloat("Lng", (float) ODENSE_LNG);
     }
 
     @Override
@@ -75,16 +93,27 @@ public class ExploreFragment extends Fragment {
         }
     }
 
-    private Issue testData() {
-        String description = getString(R.string.lorem);
-        return new Issue(100, "in trash - 24m ago", "Full trash", description);
-    }
-
-    private void fetchTasks() {
+    @SuppressWarnings("unchecked")
+    private ArrayList<Issue> fetchIssues() {
         //TODO fetch tasks from API.
+        ArrayList<Issue> providedIssues = new ArrayList<>();
+        List<Issue> issues = Issue.listAll(Issue.class);
+        for (Issue issue : issues) {
+            if (Util.getInstance().distFrom(latitude, longitude, issue.getLatitude(), issue.getLongitude()) < 10) {
+                providedIssues.add(issue);
+            }
+        }
+        return providedIssues;
     }
 
     private void updateList() {
         //TODO update list after fetch.
+        exploreAdapter.swap(fetchIssues());
+        swipeRefreshLayout.setRefreshing(false);
+    }
+
+    @Override
+    public void onRefresh() {
+        updateList();
     }
 }

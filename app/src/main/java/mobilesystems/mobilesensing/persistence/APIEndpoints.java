@@ -11,6 +11,7 @@ import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.PATCH;
 import retrofit2.http.POST;
+import retrofit2.http.PUT;
 import retrofit2.http.Path;
 
 /**
@@ -58,7 +59,7 @@ public interface APIEndpoints {
     @POST("issue")
     Call<Issue> createIssue(@Body Issue issue);
 
-    @PATCH("issue/{id}")
+    @PUT("issue/{id}")
     Call<Issue> updateIssue(@Body Issue issue, @Path("id") String issueId);
 
     @DELETE("issue/{id}")

@@ -101,6 +101,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public static User getUser(){
+        return User.first(User.class);
+    }
+
     private void loadNavHeader() {
         txtName.setText("Test user");
         txtWebsite.setText("example.com");

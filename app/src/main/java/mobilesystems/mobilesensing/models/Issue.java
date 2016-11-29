@@ -41,6 +41,7 @@ public class Issue extends SugarRecord implements Serializable {
 
     private double latitude;
     private double longitude;
+    private String picture;
 
     @SerializedName("reward")
     private int reward;
@@ -197,6 +198,30 @@ public class Issue extends SugarRecord implements Serializable {
         this.taskId = taskId;
     }
 
+    public String getIssueId() {
+        return issueId;
+    }
+
+    public void setIssueId(String issueId) {
+        this.issueId = issueId;
+    }
+
+    public List<Object> getLatLng() {
+        return latLng;
+    }
+
+    public void setLatLng(List<Object> latLng) {
+        this.latLng = latLng;
+    }
+
+    public String getPicture() {
+        return picture;
+    }
+
+    public void setPicture(String picture) {
+        this.picture = picture;
+    }
+
     @Override
     public String toString() {
         return "Issue{" +
@@ -207,10 +232,11 @@ public class Issue extends SugarRecord implements Serializable {
                 ", description='" + description + '\'' +
                 ", comment='" + comment + '\'' +
                 ", time=" + time +
-                ", pictures=" + pictures +
+                ", pictures=" + pictures.isEmpty() +
                 ", latLng=" + latLng +
                 ", latitude=" + latitude +
                 ", longitude=" + longitude +
+                ", picture='" + picture + '\'' +
                 ", reward=" + reward +
                 ", createdByUser=" + createdByUser +
                 ", solvedByUser=" + solvedByUser +

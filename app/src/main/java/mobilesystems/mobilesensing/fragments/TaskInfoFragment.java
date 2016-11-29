@@ -1,46 +1,47 @@
 package mobilesystems.mobilesensing.fragments;
 
-import android.content.Intent;
-import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import java.util.List;
 
 import mobilesystems.mobilesensing.R;
 import mobilesystems.mobilesensing.models.Issue;
 import mobilesystems.mobilesensing.other.EnDecodeImages;
-
-import static android.app.Activity.RESULT_OK;
+import mobilesystems.mobilesensing.persistence.FragmentTransactioner;
 
 /**
- * Created by Jesper on 05/11/2016.
+ * Created by Jesper on 29/11/2016.
  */
 
 public class TaskInfoFragment extends Fragment implements View.OnClickListener {
-    private final static String TASK_TAG = "task";
-    private static final int REQUEST_IMAGE_CAPTURE = 1;
+    private final static String ISSUE_TAG = "issue";
+    private final static String DEBUG_TAG = TaskInfoFragment.class.getSimpleName();
 
-    private ImageView imgTakenPhoto;
-    private ImageButton imgTakePhoto;
-    private TextView txtTaskDescription;
-    private String encodedImageString;
+    private TextView txtInfoCategory;
+    private TextView txtInfoSubject;
+    private TextView txtDistance;
+    private ImageView imgInfoUserPicture;
+    private TextView txtInfoDescription;
+    private Button btnSolveIssue;
+    private Issue issue;
 
-    public static TaskInfoFragment newInstance(Issue task) {
-        TaskInfoFragment fragment = new TaskInfoFragment();
+    public static TaskInfoFragment newInstance(Issue issue) {
 
         Bundle args = new Bundle();
-        args.putSerializable(TASK_TAG, task);
+
+        TaskInfoFragment fragment = new TaskInfoFragment();
         fragment.setArguments(args);
+        args.putSerializable(ISSUE_TAG, issue);
         return fragment;
     }
 
@@ -48,72 +49,50 @@ public class TaskInfoFragment extends Fragment implements View.OnClickListener {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.task_info, container, false);
-        imgTakenPhoto = (ImageView) view.findViewById(R.id.imgTakenPhoto);
-        imgTakePhoto = (ImageButton) view.findViewById(R.id.imgBtnTakePhoto);
-        imgTakePhoto.setOnClickListener(this);
-        txtTaskDescription = (TextView) view.findViewById(R.id.txtTaskDescription);
 
-        Bundle bundle = getArguments();
+        txtInfoCategory = (TextView) view.findViewById(R.id.txt_info_category);
+        txtInfoSubject = (TextView) view.findViewById(R.id.txt_info_subject);
+        txtDistance = (TextView) view.findViewById(R.id.txt_distance);
+        txtInfoDescription = (TextView) view.findViewById(R.id.txt_info_description);
+        imgInfoUserPicture = (ImageView) view.findViewById(R.id.img_info_user_picture);
+        btnSolveIssue = (Button) view.findViewById(R.id.btn_solve_issue);
+        btnSolveIssue.setOnClickListener(this);
 
-        Issue task = (Issue) bundle.getSerializable(TASK_TAG);
-        if (task != null) {
-            setUpInfo(task);
+        issue = (Issue) getArguments().getSerializable(ISSUE_TAG);
+        if (issue != null) {
+            setUpInfoDisplay(issue);
         }
-        setHasOptionsMenu(true);
 
         return view;
     }
 
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        super.onCreateOptionsMenu(menu, inflater);
-        inflater.inflate(R.menu.task_info_menu, menu);
+    private void setUpInfoDisplay(Issue issue) {
+        txtInfoCategory.setText(issue.getCategory());
+        txtInfoSubject.setText(issue.getElement());
+        txtInfoDescription.setText(issue.getDescription());
+        txtDistance.setText("100 m"); //TODO skal have afstanden til denne.
+        setUpInfoImage(issue);
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.menu_check_task:
-                uploadProofoFTask();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+    private void setUpInfoImage(Issue issue) {
+        try {
+            Log.d(DEBUG_TAG, "Picture: " + issue.getPicture());
+            String base64 = issue.getPicture();
+            imgInfoUserPicture.setImageBitmap(EnDecodeImages.decodeBase64(base64));
+        } catch (ClassCastException | NullPointerException ex) {
+            Log.e(DEBUG_TAG, "Unable to cast picture base 64 to string", ex);
         }
-    }
-
-    private void setUpInfo(Issue task) {
-        txtTaskDescription.setText(task.getDescription());
-    }
-
-    private void dispatchTakePictureIntent() {
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if (takePictureIntent.resolveActivity(getActivity().getPackageManager()) != null) {
-            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
-        }
-    }
-
-    private boolean uploadProofoFTask() {
-        //TODO upload proof
-        return false;
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-            Bundle extras = data.getExtras();
-            Bitmap imageBitmap = (Bitmap) extras.get("data");
-            imgTakenPhoto.setImageBitmap(imageBitmap);
-        }
-    }
-
-    private void encodeImage(Bitmap imageBitmap) {
-        encodedImageString = EnDecodeImages.encodeToBase64(imageBitmap, Bitmap.CompressFormat.PNG, 100);
     }
 
     @Override
     public void onClick(View view) {
-        if (view.getId() == imgTakePhoto.getId()) {
-            dispatchTakePictureIntent();
+        if (view.getId() == btnSolveIssue.getId()) {
+            if (issue != null) {
+                Fragment taskInfoFragment = SolveTaskFragment.newInstance(issue);
+                FragmentTransactioner.get().transactFragments(getActivity(), taskInfoFragment, "task_info_fragment");
+            } else {
+                Toast.makeText(getActivity(), "Desværre kunne vi ikke åbne opgaven, prøv igen!", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 }

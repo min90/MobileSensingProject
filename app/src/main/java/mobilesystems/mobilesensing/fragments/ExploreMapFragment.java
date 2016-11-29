@@ -1,6 +1,8 @@
 package mobilesystems.mobilesensing.fragments;
 
 import android.Manifest;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
@@ -44,6 +46,7 @@ import mobilesystems.mobilesensing.R;
 import mobilesystems.mobilesensing.geofence.GeoJsonFetcher;
 import mobilesystems.mobilesensing.json.GeoJSONParser;
 import mobilesystems.mobilesensing.models.Issue;
+import mobilesystems.mobilesensing.other.Util;
 import mobilesystems.mobilesensing.persistence.FragmentTransactioner;
 import mobilesystems.mobilesensing.persistence.NetworkPackager;
 
@@ -52,10 +55,12 @@ import mobilesystems.mobilesensing.persistence.NetworkPackager;
  */
 
 public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener, GoogleMap.OnMarkerClickListener, com.google.android.gms.location.LocationListener {
+        GoogleApiClient.OnConnectionFailedListener, GoogleMap.OnMarkerClickListener, com.google.android.gms.location.LocationListener,
+        GoogleMap.OnInfoWindowClickListener {
     private final static String DEBUG_TAG = ExploreFragment.class.getSimpleName();
 
     private final static int MY_LOCATION_REQUEST_CODE = 00;
+    private final static String SHARED_TAG = "shared";
     public final static double ODENSE_LAT = 55.403756;
     public final static double ODENSE_LNG = 10.402370;
 
@@ -69,11 +74,12 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
     private GeoJSONParser geoJSONParser;
     private ArrayList<LatLng> latLngs;
     private LinkedHashMap<Marker, Issue> markers;
+    private SharedPreferences sharedPreferences;
+    private SharedPreferences.Editor editor;
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        generateTask();
         View view = inflater.inflate(R.layout.explore_map, container, false);
         mapView = (MapView) view.findViewById(R.id.map);
         mapView.onCreate(savedInstanceState);
@@ -89,6 +95,8 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
         NetworkPackager networkPackager = new NetworkPackager(getActivity());
         networkPackager.getIssues();
         networkPackager.getChallenges();
+        sharedPreferences = getActivity().getSharedPreferences(SHARED_TAG, Context.MODE_PRIVATE);
+        editor = sharedPreferences.edit();
         return view;
     }
 
@@ -99,34 +107,6 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
 
-    private void generateTask() {
-        Issue task = new Issue();
-        task.setDescription("Affald på hjørnet");
-        task.setCategory("Affald");
-        task.setLatitude(55.422138);
-        task.setLongitude(10.254772);
-        task.setTaskId(1);
-
-        task.save();
-
-        Issue task1 = new Issue();
-        task1.setDescription("Smadret lampe");
-        task1.setCategory("Belysning");
-        task1.setLatitude(55.420044);
-        task1.setLongitude(10.271659);
-        task1.setTaskId(2);
-
-        task1.save();
-
-        Issue task2 = new Issue();
-        task2.setDescription("Smadret lampe");
-        task2.setCategory("Belysning");
-        task2.setLatitude(55.391272);
-        task2.setLongitude(10.438900);
-        task2.setTaskId(3);
-
-        task2.save();
-    }
 
     private void connectToGoogleAPI() {
         if (mGoogleApiClient == null) {
@@ -181,6 +161,7 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
 
         googleMap.setMyLocationEnabled(true);
         googleMap.setOnMarkerClickListener(this);
+        googleMap.setOnInfoWindowClickListener(this);
 
         if (lastKnownLocation != null) {
             googleMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude())));
@@ -220,7 +201,7 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
     private LinkedHashMap<Issue, MarkerOptions> addMarkersByUsersPosition() {
         LinkedHashMap<Issue, MarkerOptions> availableTasks = new LinkedHashMap<>();
         List<Issue> allTasks = Issue.listAll(Issue.class);
-
+        Log.d(DEBUG_TAG, "Tasks: " + allTasks);
         double latitude;
         double longitude;
 
@@ -233,7 +214,7 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
         }
 
         for (int i = 0; i < allTasks.size(); i++) {
-            if (distFrom(latitude, longitude, allTasks.get(i).getLatitude(), allTasks.get(i).getLongitude()) < 50) {
+            if (Util.getInstance().distFrom(latitude, longitude, allTasks.get(i).getLatitude(), allTasks.get(i).getLongitude()) < 10) {
                 if (markers != null) {
                     MarkerOptions markerOptions = generateMarker(allTasks.get(i));
                     availableTasks.put(allTasks.get(i), markerOptions);
@@ -261,7 +242,6 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
         }
     }
 
-
     private boolean stopSearchingForMarkers() {
         if (lastKnownLocation != null && latLngs != null) {
             LatLng latLng = new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
@@ -275,69 +255,47 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
         return false;
     }
 
-    /**
-     * Implementation of the Haversine formula to calculate distance between two points
-     *
-     * @param lat1 latitude of user
-     * @param lng1 longitude of user
-     * @param lat2 latitude of task
-     * @param lng2 longitude of task
-     * @return the distance
-     */
-    public static double distFrom(double lat1, double lng1, double lat2, double lng2) {
-        double earthRadius = 6371.0;
-        double dLat = Math.toRadians(lat2 - lat1);
-        double dLng = Math.toRadians(lng2 - lng1);
-        double sindLat = Math.sin(dLat / 2);
-        double sindLng = Math.sin(dLng / 2);
-        double a = Math.pow(sindLat, 2) + Math.pow(sindLng, 2)
-                * Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2));
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        double dist = earthRadius * c;
-
-        return dist;
-    }
 
     @Override
     public void onStart() {
-        if (mGoogleApiClient != null) mGoogleApiClient.connect();
         super.onStart();
+        if (mGoogleApiClient != null) mGoogleApiClient.connect();
     }
 
     @Override
     public void onResume() {
+        if(mapView != null) mapView.onResume();
         super.onResume();
-        mapView.onResume();
     }
 
     @Override
     public void onPause() {
-        mapView.onPause();
+        if(mapView != null) mapView.onPause();
         super.onPause();
     }
 
     @Override
     public void onStop() {
-        if (mGoogleApiClient != null) mGoogleApiClient.disconnect();
         super.onStop();
+        if (mGoogleApiClient != null) mGoogleApiClient.disconnect();
     }
 
     @Override
     public void onDestroy() {
-        mapView.onDestroy();
+        if(mapView != null) mapView.onDestroy();
         super.onDestroy();
     }
 
     @Override
     public void onLowMemory() {
+        if(mapView != null) mapView.onLowMemory();
         super.onLowMemory();
-        mapView.onLowMemory();
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        mapView.onSaveInstanceState(outState);
+        //mapView.onSaveInstanceState(outState);
     }
 
     @Override
@@ -353,6 +311,8 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
         if (lastKnownLocation != null) {
             Log.d(DEBUG_TAG, "Latitude: " + lastKnownLocation.getLatitude());
             Log.d(DEBUG_TAG, "Longitude: " + lastKnownLocation.getLongitude());
+            editor.putFloat("Lat", (float) lastKnownLocation.getLatitude()).commit();
+            editor.putFloat("Lng", (float) lastKnownLocation.getLongitude()).commit();
             moveCamera(mGoogleMap, 15, new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude()));
         }
 
@@ -373,6 +333,7 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
 
     @Override
     public boolean onMarkerClick(Marker marker) {
+        Log.d(DEBUG_TAG, "Clicked");
         Issue task = null;
         if (markers != null) {
             task = markers.get(marker);
@@ -395,5 +356,10 @@ public class ExploreMapFragment extends Fragment implements OnMapReadyCallback, 
             LocationServices.FusedLocationApi.removeLocationUpdates(
                     mGoogleApiClient, this);
         }
+    }
+
+    @Override
+    public void onInfoWindowClick(Marker marker) {
+        Log.d(DEBUG_TAG, "Clicked");
     }
 }

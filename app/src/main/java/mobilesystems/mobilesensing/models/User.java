@@ -14,6 +14,7 @@ import mobilesystems.sugarorm.SugarRecord;
 
 public class User extends SugarRecord {
 
+    @SerializedName("objectId")
     private String userID;
     @SerializedName("phone")
     private String userPhone;
