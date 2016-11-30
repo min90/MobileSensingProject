@@ -28,6 +28,10 @@
         <item>@string/nav_challenges</item>
         <item>@string/nav_my_account</item>
     </string-array>
+    <string-array name="solved_issue">
+        <item>Ryddet skrald - 50 point</item>
+        <item>Fjernet grene fra vejen - 100 point</item>
+    </string-array>
     <string name="lorem">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut nec mi molestie, pulvinar augue et, iaculis sapien</string>
 
     <string name="activity_title_about_us">About Us</string>
