@@ -17,7 +17,10 @@ public class Challenge extends SugarRecord {
     @SerializedName("description")
     private String challengeDescription;
 
-    public Challenge(int challengeId, String challengeTitle, String challengeDescription) {
+    public Challenge() {
+    }
+
+    public Challenge(String challengeTitle, String challengeDescription) {
         this.challengeId = challengeId;
         this.challengeTitle = challengeTitle;
         this.challengeDescription = challengeDescription;
